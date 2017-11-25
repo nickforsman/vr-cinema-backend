@@ -6,8 +6,54 @@ const _ = require("lodash")
 const app = express()
 
 const ELISA = "https://rc-rest-api.elisaviihde.fi/rest/search/query"
+const THEMOVIEDB = "https://api.themoviedb.org/3"
+const THEMOVIEDB_API_KEY = process.env.THEMOVIEDB_API_KEY
 
 app.use(bodyParser.json())
+
+app.get("/movie", async (req, res) => {
+  if(req.query.movie) {
+    try {
+      let movie = await axios.get(THEMOVIEDB+"/search/movie?api_key="+THEMOVIEDB_API_KEY+"&query="+req.query.movie)
+      if (movie.data.results) {
+        movie = _.first(movie.data.results)
+        const id = movie.id ? movie.id : 0
+        const trailers = await axios.get(THEMOVIEDB+"/movie/"+id+"/videos?api_key="+THEMOVIEDB_API_KEY)
+        if (trailers.data.results) {
+          const trailer = _.find(trailers.data.results, trailer => _.toLower(trailer.site) === "youtube")
+          if (trailer) {
+            res.send(trailer)
+          } else {
+            res.status(404)
+            res.send({
+              error: "No Youtube trailer found for movie"
+            })                    
+          }
+        } else {
+          res.status(404)
+          res.send({
+            error: "No Trailer found for movie"
+          })          
+        }
+      } else {
+        res.status(404)
+        res.send({
+          error: "No Movie found"
+        })
+      }
+    } catch(err) {
+      res.status(500)
+      res.send({
+        error: err
+      })
+    }
+  } else {
+    res.status(400)
+    res.send({
+      error: "Please Provide Movie ID"
+    })
+  }
+})
 
 app.get("/movies", async (req, res) => {
   if (req.query.genres) {
@@ -33,14 +79,15 @@ app.get("/movies", async (req, res) => {
     res.send({
       movies
     })
+
   } else {
     res.send({
-      err: "Please give me genres"
+      error: "Please give me genres"
     })
   }
 })
 
-app.post("/recommend", () => {
+app.get("/recommendations", (req, res) => {
     
 })
 

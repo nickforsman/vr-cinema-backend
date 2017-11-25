@@ -58,9 +58,10 @@ app.get("/movie", async (req, res) => {
 app.get("/movies", async (req, res) => {
   if (req.query.genres) {
     const queries = req.query.genres.split(",")
+    const pageOffset = req.query.pageOffset ? req.query.pageOffset : 0
     let movies = [];
     try {
-      const result = await axios.get(ELISA+"?q="+queries.join(","))
+      const result = await axios.get(ELISA+"?q="+queries.join(",")+"?pageOffset="+pageOffset)
       movies = _.map(result.data.results, movie => {
         const hits = _.pick(movie, "searchHits")
         return [...hits.searchHits]
@@ -87,8 +88,12 @@ app.get("/movies", async (req, res) => {
   }
 })
 
-app.get("/recommendations", (req, res) => {
+app.post("/recommendations", (req, res) => {
+  try {
     
+  } catch(err) {
+    
+  }
 })
 
 app.listen(process.env.PORT || 5000);

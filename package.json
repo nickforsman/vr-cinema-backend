@@ -14,6 +14,7 @@
     "express": "^4.16.2",
     "hls-server": "^1.2.2",
     "lodash": "^4.17.4",
-    "rtmp-server": "^0.2.0"
+    "rtmp-server": "^0.2.0",
+    "sqlite3": "^3.1.13"
   }
 }

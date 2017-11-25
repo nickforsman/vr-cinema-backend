@@ -2,12 +2,15 @@ const express = require("express")
 const axios = require("axios")
 const bodyParser = require("body-parser")
 const _ = require("lodash")
+const sqlite3 = require("sqlite3")
 
 const app = express()
 
 const ELISA = "https://rc-rest-api.elisaviihde.fi/rest/search/query"
 const THEMOVIEDB = "https://api.themoviedb.org/3"
 const THEMOVIEDB_API_KEY = process.env.THEMOVIEDB_API_KEY
+
+const db = new sqlite3.Database('movies.db');
 
 app.use(bodyParser.json())
 
@@ -55,30 +58,40 @@ app.get("/movie", async (req, res) => {
   }
 })
 
+function getMovies(genres, callback) {
+  db.serialize(() => {
+    db.all(`
+      SELECT M.*, C.name as Category FROM movies as M, categories as C
+      INNER JOIN moviecategories 
+      ON M.id = moviecategories.movieId
+      INNER JOIN categories
+      ON moviecategories.categoryId = C.id
+      WHERE Category IN (${genres.join(",")})`, (err, row) => {
+        if (err) {
+          console.log(err)
+        }
+        callback(row)
+      })
+  })
+}
+
+const sql = `
+SELECT M.*, C.name as Category FROM movies as M, categories as C
+INNER JOIN moviecategories 
+ON M.id = moviecategories.movieId
+INNER JOIN categories
+ON moviecategories.categoryId = C.id`
+
 app.get("/movies", async (req, res) => {
   if (req.query.genres) {
-    const queries = req.query.genres.split(",")
-    const pageOffset = req.query.pageOffset ? req.query.pageOffset : 0
-    let movies = [];
-    try {
-      const result = await axios.get(ELISA+"?q="+queries.join(",")+"?pageOffset="+pageOffset)
-      movies = _.map(result.data.results, movie => {
-        const hits = _.pick(movie, "searchHits")
-        return [...hits.searchHits]
-      })
-      movies = _.reduce(movies, (prev, next) => {
-        return prev.concat(next)
-      }).filter(movie => movie.imageUrl && !_.includes(movie.imageUrl, "catchup"))
-    } catch(err) {
-      res.status(500)
-      res.send({
-        error: err.data
-      });
-      return
-    }
+    let movies = []
+    const genres = _.map(req.query.genres.split(","), genre => "'" + genre + "'")
 
-    res.send({
-      movies
+    getMovies(genres, rows => {
+      movies = _.uniqBy([...rows], "Title")
+      res.send({
+        movies: _.slice(movies, 0, 60)
+      })
     })
 
   } else {

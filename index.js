@@ -12,9 +12,9 @@ const THEMOVIEDB_API_KEY = process.env.THEMOVIEDB_API_KEY
 app.use(bodyParser.json())
 
 app.get("/movie", async (req, res) => {
-  if(req.query.movie) {
+  if(req.query.trailer) {
     try {
-      let movie = await axios.get(THEMOVIEDB+"/search/movie?api_key="+THEMOVIEDB_API_KEY+"&query="+req.query.movie)
+      let movie = await axios.get(THEMOVIEDB+"/search/movie?api_key="+THEMOVIEDB_API_KEY+"&query="+req.query.trailer)
       if (movie.data.results) {
         movie = _.first(movie.data.results)
         const id = movie.id ? movie.id : 0

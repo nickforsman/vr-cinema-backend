@@ -67,7 +67,7 @@ app.get("/movies", async (req, res) => {
       })
       movies = _.reduce(movies, (prev, next) => {
         return prev.concat(next)
-      })
+      }).filter(movie => movie.imageUrl)
     } catch(err) {
       res.status(500)
       res.send({

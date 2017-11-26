@@ -27,11 +27,16 @@ app.get("/movie", async (req, res) => {
           const trailer = _.find(trailers.data.results, trailer => _.toLower(trailer.site) === "youtube")
           if (trailer) {
             const youtubes = await axios.get(YOUTUBEAPI+trailer.key)
-            const videos = _.filter(youtubes, yt => yt.fType === "mp4")
-            const max = videos.reduce((prev, current) => {
-              return (Math.floor(Math.log(prev.rSize) / Math.log(1024)) > Math.floor(Math.log(current.rSize) / Math.log(1024))) ? prev : current
-            })
-            res.send(max)
+            if (youtubes.data) {
+              const vidInfo = youtubes.data.vidInfo
+              const videos = _.filter(vidInfo, d => {
+                return d.ftype === "mp4"
+              }) 
+              const max = videos.reduce((prev, current) => {
+                return (Math.floor(Math.log(prev.rSize) / Math.log(1024)) > Math.floor(Math.log(current.rSize) / Math.log(1024))) ? prev : current
+              })
+              res.send(max)
+            }
           } else {
             res.status(404)
             res.send({

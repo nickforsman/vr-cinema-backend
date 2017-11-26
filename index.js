@@ -102,10 +102,19 @@ app.get("/movies", async (req, res) => {
 })
 
 app.post("/recommendations", (req, res) => {
-  try {
-    
-  } catch(err) {
-    
+  if (req.body.movies) {
+    const movies = req.body.movies
+    setTimeout(() => {
+      const movie = movies[Math.floor(Math.random()*movies.length-1)]
+      res.send({
+        movie
+      })
+    }, 3000)
+  } else {
+    res.status(400)
+    res.send({
+      error: "Please give movies"
+    })
   }
 })
 

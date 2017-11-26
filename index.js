@@ -8,6 +8,7 @@ const app = express()
 
 const ELISA = "https://rc-rest-api.elisaviihde.fi/rest/search/query"
 const THEMOVIEDB = "https://api.themoviedb.org/3"
+const YOUTUBEAPI = "https://downloadmp.org/@api/json/videos/"
 const THEMOVIEDB_API_KEY = process.env.THEMOVIEDB_API_KEY
 
 const db = new sqlite3.Database('movies.db');
@@ -25,7 +26,12 @@ app.get("/movie", async (req, res) => {
         if (trailers.data.results) {
           const trailer = _.find(trailers.data.results, trailer => _.toLower(trailer.site) === "youtube")
           if (trailer) {
-            res.send(trailer)
+            const youtubes = await axios.get(YOUTUBEAPI+trailer.key)
+            const videos = _.filter(youtubes, yt => yt.fType === "mp4")
+            const max = videos.reduce((prev, current) => {
+              return (Math.floor(Math.log(prev.rSize) / Math.log(1024)) > Math.floor(Math.log(current.rSize) / Math.log(1024))) ? prev : current
+            })
+            res.send(max)
           } else {
             res.status(404)
             res.send({

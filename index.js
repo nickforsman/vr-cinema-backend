@@ -117,9 +117,7 @@ app.post("/recommendations", (req, res) => {
     const movies = req.body.movies
     setTimeout(() => {
       const movie = movies[Math.floor(Math.random()*movies.length-1)]
-      res.send({
-        movie
-      })
+      res.send(movie)
     }, 3000)
   } else {
     res.status(400)
